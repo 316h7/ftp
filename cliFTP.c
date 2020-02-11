@@ -5,8 +5,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "srv_h.h" 
 
-#define BUFFSIZE 80000//ZMNIEJSZYC JESLI BEDZIE CORE DUMPED (W SRV TEZ WTEDY)
+// #define BUFFSIZE 80000//ZMNIEJSZYC JESLI BEDZIE CORE DUMPED (W SRV TEZ WTEDY)
 //nie wiem dlaczego, ale jak dalem buffsize na 3mb, to niby sie wlaczalo,
 //ale nie dzialalo wysylanie na serwer (odbieranie z niego dzialalo)
 //najwieksza wartosc dla jakiej to wszystko smiga to 80000 (ale nie wiem dlaczego)
@@ -18,6 +19,9 @@ int main()
     size_t uchwyt=0;
     struct sockaddr_in serverAddr;
     socklen_t addr_size;
+
+     char toSEND[1];
+    char ch;
   
         /*---- Create the socket. The three arguments are: ----*/
         /* 1) Internet domain 2) Stream socket 3) Default protocol (TCP in this case) */
@@ -49,16 +53,11 @@ int main()
             printf("Podaj nazwe pliku do wyslania: ");
             scanf("%s",nazwaPliku);
             strcpy(buffer, "wyslij ");
-            strcat(buffer, nazwaPliku);
-            send(clientSocket, buffer, BUFFSIZE,0);
-            uchwyt = open(nazwaPliku, O_RDONLY);
-            if (uchwyt != -1)
-            {
-                sendfile(clientSocket, uchwyt, NULL, BUFFSIZE);
-                printf("Wyslano plik!\n");
-            }
-            else printf("Brak takiego pliku!\n");
-            close(uchwyt);
+            send(clientSocket, buffer, sizeof(buffer),0);
+
+            send_file( nazwaPliku, clientSocket);
+            // else printf("Brak takiego pliku!\n");
+            // close(uchwyt);
             break;
         }
         case 2://pobierz plik

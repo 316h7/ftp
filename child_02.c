@@ -119,13 +119,12 @@ again:
             }
             else if(!strcmp(command, "wyslij"))
             {
+            	printf("send \n" );
                 /*---- Read the message from the server into the buffer ----*/
-                recv(connfd, buf, BUFFSIZE2, 0);
-                FILE *file = fopen(command2, "w");
-                fputs(buf, file);
-                fclose(file);
-            }
-
+                recv_file( connfd );
+                printf("OK \n" );
+           			 // }
+}
             else if(!strcmp(command, "cd"))
             {
             	// chroot(command2); 

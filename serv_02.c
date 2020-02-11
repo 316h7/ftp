@@ -73,10 +73,10 @@
     /*---- Accept call creates a new socket for the incoming connection ----*/
     /*---- Send message to the socket of the incoming connection ----*/
     /*----Koniec inicjalizacji, poczatek obslugi komend ----*/
-    daemon_init(argv[0], LOG_USER, 1000, listenfd);
-    syslog (LOG_NOTICE, "Program started by User %d", getuid ());
-    syslog (LOG_INFO,"Waiting for clients ... ");
-    // printf("Serwer jest uruchomiony.\n");
+    // daemon_init(argv[0], LOG_USER, 1000, listenfd);
+    // syslog (LOG_NOTICE, "Program started by User %d", getuid ());
+    // syslog (LOG_INFO,"Waiting for clients ... ");
+    printf("Serwer jest uruchomiony.\n");
 
 
 

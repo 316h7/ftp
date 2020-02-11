@@ -37,3 +37,7 @@ void cmd_child(int connfd);
 
 
 int daemon_init(const char *pname, int facility, uid_t uid, int socket);
+
+
+int send_file( char *fname, int c);
+int recv_file(int new_s );
