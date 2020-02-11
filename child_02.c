@@ -119,7 +119,7 @@ again:
             }
             else if(!strcmp(command, "wyslij"))
             {
-            	printf("send \n" );
+            	printf("Sending... \n" );
                 /*---- Read the message from the server into the buffer ----*/
                 recv_file( connfd );
                 printf("OK \n" );
