@@ -23,8 +23,8 @@ int main()
 
 
         printf("\n\nCo chcesz zrobic? \nsend [file_name] - przeslij plik \nrecieve [file_name]-pobierz plik ");
-        printf("\n?-przenies/zmien nazwe\n?-wyszukaj\n ?-wylistuj pliki ");
-        printf("\npwd-obecny folder \ncd [path] - zmien folder \nhelp - for help  \nquit - for quit \n");
+        printf("\n?-przenies/zmien nazwe \n?-wyszukaj \n?-wylistuj pliki ");
+        printf("\npwd-obecny folder \ncd [path] - zmien folder \nhelp - for help  \nexit - for exit \n");
   
         /*---- Create the socket. The three arguments are: ----*/
         /* 1) Internet domain 2) Stream socket 3) Default protocol (TCP in this case) */
@@ -72,8 +72,8 @@ int main()
                 if(!strcmp(command, "help"))//przeslij plik
         {
         printf("\n\nCo chcesz zrobic? \nsend [file_name] - przeslij plik \nrecieve [file_name]-pobierz plik ");
-        printf("\n?-przenies/zmien nazwe\n?-wyszukaj\n ?-wylistuj pliki ");
-        printf("\npwd-obecny folder \ncd [path] - zmien folder \nhelp - for help  \nquit - for quit \n");
+        printf("\n?-przenies/zmien nazwe \n?-wyszukaj \n?-wylistuj pliki ");
+        printf("\npwd-obecny folder \ncd [path] - zmien folder \nhelp - for help  \nexit - for exit \n");
   
         }
         // case 2://pobierz plik
@@ -155,7 +155,7 @@ int main()
         }
 
 
-                if(!strcmp(command, "quit"))//wyswietl pliki
+                if(!strcmp(command, "exit"))//wyswietl pliki
         {
 
 
