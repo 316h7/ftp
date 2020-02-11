@@ -139,6 +139,9 @@ again:
             
             for (int a=0; a<BUFFSIZE2; a++)
                 buf[a]=0;
+            for (int a=0; a<BUFFSIZE; a++)
+                command[a]=0;
+
             //}
 
   goto again;

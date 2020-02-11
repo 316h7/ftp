@@ -40,8 +40,14 @@ send(c, ptrvar, sizeof(int), 0);
 while((ch=getc(file))!=EOF){
         toSEND[0] = ch;
         send(c, toSEND, 1, 0);
+        // printf("%s\n",toSEND );
 
 }
+      // if(feof(file)){
+      // 	printf("feof");
+      // 	// break;
+      // }
+
 
 free(buffer);
 return 0;
@@ -75,19 +81,28 @@ rewind (file);
 int *file_size;        // объявление указателя
 int i_size;
 file_size=&i_size;
-recv(new_s, file_size, sizeof(int),0);  //size of recivied file
+recv(new_s, file_size, sizeof(int),MSG_DONTWAIT);  //size of recivied file
 
  //printf("size%d --- %d \n ",i_size, *file_size );
 int ccc;
 char * buffer = (char*) malloc(sizeof(char) * i_size);
 int nbytes=0;
-printf("size -%d\n",i_size );
-buffer[0]=0;
+printf("size- %d\n",i_size );
+// buffer[0]=0;
 
 while(1){
-                if( ccc=recv(new_s, buffer, 1, 0) != 0 ) {        // https://stackoverflow.com/questions/15116053/some-eof-mechanism-for-send-recv-in-c
+
+
+
+                if(i_size >= 0 & recv(new_s, buffer, 1, MSG_DONTWAIT) !=0 ) {        // https://stackoverflow.com/questions/15116053/some-eof-mechanism-for-send-recv-in-c
+                	
                     fwrite (buffer , sizeof(buffer[0]) , 1 , file);  //write EOF mechanism for recv 
-                     printf("%d\n",ccc);
+                     i_size=i_size-1;
+                    // if (i_size<-1)
+                    // {
+                    // 	break;
+                    // }
+                     printf("%d\n",i_size);
                 }
 
                     else{

@@ -40,6 +40,13 @@ int main()
         /* Set all bits of the padding field to 0 */
         memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
+           int one = 1;
+
+            if (setsockopt(clientSocket, SOL_TCP, TCP_NODELAY, &one, sizeof(one)) < 0)
+        {
+            printf("setsockopt error");
+        };
+
         /*---- Connect the socket to the server using the address struct ----*/
         addr_size = sizeof serverAddr;
         connect(clientSocket, (struct sockaddr *) &serverAddr, addr_size);
@@ -69,7 +76,7 @@ int main()
             // break;
         }
 
-                if(!strcmp(command, "help"))//przeslij plik
+               else if(!strcmp(command, "help"))//przeslij plik
         {
         printf("\n\nCo chcesz zrobic? \nsend [file_name] - przeslij plik \nrecieve [file_name]-pobierz plik ");
         printf("\n?-przenies/zmien nazwe \n?-wyszukaj \n?-wylistuj pliki ");
@@ -119,7 +126,7 @@ int main()
         //     strcat(buffer, "*\"*");
         //     break;
         // }
-        if(!strcmp(command, "ls"))//wyswietl pliki
+        else if(!strcmp(command, "ls"))//wyswietl pliki
         {
             strcpy(buffer, "ls -l");
 
@@ -132,7 +139,7 @@ int main()
 
             // break;
         }
-        if(!strcmp(command, "pwd"))
+        else if(!strcmp(command, "pwd"))
         {
             strcpy(buffer,"pwd");
             send(clientSocket, buffer, BUFFSIZE,0);
@@ -143,7 +150,7 @@ int main()
             // break;
         }
 
-        if(!strcmp(command, "cd"))//wyswietl pliki
+        else if(!strcmp(command, "cd"))//wyswietl pliki
         {
             strcpy(buffer,"cd ");
             strcat(buffer, command2);
@@ -175,8 +182,12 @@ int main()
         //     /*---- Print the received message ----*/
         //     printf("%s", buffer);
         // }
-            for (int a=0; a<BUFFSIZE; a++)
+            for (int a=0; a<BUFFSIZE; a++){
             buffer[a]=0;//czyszczenie bufora
+            command[a]=0;}
+            
+            for (int a=0; a<255; a++)
+            option[a]=0;//czyszczenie bufora
     }
 
         

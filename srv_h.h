@@ -4,6 +4,7 @@
 #include    <sys/time.h>    /* timeval{} for select() */
 #include    <time.h>                /* timespec{} for pselect() */
 #include	<netinet/in.h>  /* sockaddr_in{} and other Internet defns */
+#include    <netinet/tcp.h>
 #include	<arpa/inet.h>   /* inet(3) functions */
 #include	<errno.h>
 #include	<fcntl.h>               /* for nonblocking */

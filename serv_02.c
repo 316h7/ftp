@@ -53,6 +53,14 @@
     /* Set IP address to localhost */
     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     sndbuf = 1;
+
+   int one = 1;
+
+    if (setsockopt(listenfd, SOL_TCP, TCP_NODELAY, &one, sizeof(one)) < 0)
+    {
+        printf("setsockopt error");
+    };
+
     if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &sndbuf, sizeof(sndbuf)) < 0)
     {
         printf("setsockopt error");
