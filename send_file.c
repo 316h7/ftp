@@ -87,6 +87,7 @@ recv(new_s, file_size, sizeof(int),MSG_DONTWAIT);  //size of recivied file
 int ccc;
 char * buffer = (char*) malloc(sizeof(char) * i_size);
 int nbytes=0;
+char toRECV[1];
 printf("size- %d\n",i_size );
 // buffer[0]=0;
 
@@ -94,9 +95,9 @@ while(1){
 
 
 
-                if(i_size >= 0 & recv(new_s, buffer, 1, MSG_DONTWAIT) !=0 ) {        // https://stackoverflow.com/questions/15116053/some-eof-mechanism-for-send-recv-in-c
+                if(i_size > 0 & recv(new_s, toRECV, 1, MSG_DONTWAIT) !=0 ) {        // https://stackoverflow.com/questions/15116053/some-eof-mechanism-for-send-recv-in-c
                 	
-                    fwrite (buffer , sizeof(buffer[0]) , 1 , file);  //write EOF mechanism for recv 
+                    fwrite (toRECV , sizeof(toRECV[0]) , 1 , file);  //write EOF mechanism for recv 
                      i_size=i_size-1;
                     // if (i_size<-1)
                     // {
