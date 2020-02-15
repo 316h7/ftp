@@ -7,17 +7,13 @@
 #include <arpa/inet.h>
 #include "srv_h.h" 
 
-// #define BUFFSIZE 80000//ZMNIEJSZYC JESLI BEDZIE CORE DUMPED (W SRV TEZ WTEDY)
-//nie wiem dlaczego, ale jak dalem buffsize na 3mb, to niby sie wlaczalo,
-//ale nie dzialalo wysylanie na serwer (odbieranie z niego dzialalo)
-//najwieksza wartosc dla jakiej to wszystko smiga to 80000 (ale nie wiem dlaczego)
 
 int main()
 {
-    char buffer[BUFFSIZE], kopia [BUFFSIZE], nazwaPliku[255], option[255];
-    char command2[BUFFSIZE], command[BUFFSIZE];
+    char buffer[BUFFSIZE], option[BUFFSIZE];
+    char command2[BUFFSIZE], command1[BUFFSIZE];
     int clientSocket;
-    size_t uchwyt=0;
+
     struct sockaddr_in serverAddr;
     socklen_t addr_size;
 
@@ -30,6 +26,12 @@ int main()
         /* 1) Internet domain 2) Stream socket 3) Default protocol (TCP in this case) */
         clientSocket = socket(PF_INET, SOCK_STREAM, 0);
 
+int one=1;
+    if (setsockopt(clientSocket, SOL_TCP, TCP_NODELAY, &one, sizeof(one)) < 0)
+    {
+        printf("setsockopt error");
+    };
+
         /*---- Configure settings of the server address struct ----*/
         /* Address family = Internet */
         serverAddr.sin_family = AF_INET;
@@ -40,43 +42,71 @@ int main()
         /* Set all bits of the padding field to 0 */
         memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
-           int one = 1;
 
-            if (setsockopt(clientSocket, SOL_TCP, TCP_NODELAY, &one, sizeof(one)) < 0)
-        {
-            printf("setsockopt error");
-        };
 
         /*---- Connect the socket to the server using the address struct ----*/
         addr_size = sizeof serverAddr;
         connect(clientSocket, (struct sockaddr *) &serverAddr, addr_size);
+
+
   while(1)
     {
   
 
-        // scanf("%s",&option);
-        // gets(option); 
+
         printf("\n=> ");
-        fgets( option, 255, stdin );
-        // printf("%s\n",option );
-        sscanf(option,"%s %s", command, command2);//WYBOR CZYNNOSCI W TAKI SPOSOB
-        // printf("%s %s\n",option );
-        // switch(command)
-        // {
-        if(!strcmp(command, "send"))//przeslij plik
+        fgets( option, BUFFSIZE, stdin );
+
+        sscanf(option,"%s %s", command1, command2);//WYBOR CZYNNOSCI W TAKI SPOSOB
+
+        if(!strcmp(command1, "send"))//przeslij plik
         {
             // printf("Podaj nazwe pliku do wyslania: ");
-            // scanf("%s",nazwaPliku);
-            strcpy(buffer, "wyslij ");
-            send(clientSocket, buffer, sizeof(buffer),0);
+            // scanf("%s",filename);
+            // strcpy(buffer, "wyslij");
+            if (command2[0] == '\0'){
 
-            send_file( command2, clientSocket);
-            // else printf("Brak takiego pliku!\n");
-            // close(uchwyt);
-            // break;
+                printf("@ missing filename\n" );
+
+            }
+            else if( access( command2, F_OK ) != -1 ) {   // file exists
+            send(clientSocket, command1, BUFFSIZE,0);
+            // strcpy(filename,command2);
+            send_file(command2, clientSocket);}
+  
+            else // file doesn't exist
+            printf("@ file doesn't exist"); 
+                         
+
+
         }
 
-               else if(!strcmp(command, "help"))//przeslij plik
+        else  if(!strcmp(command1, "recv"))//przeslij plik
+        {
+
+            if (command2[0] == '\0'){
+
+                printf("@ missing filename\n" );
+
+            }
+            else{
+            // strcpy(buffer, command1);
+            strcat(command1, " ");  
+            strcat(command1, command2); 
+            printf("%s\n",command1 );
+            printf("%d\n",sizeof(command1) );
+            send(clientSocket, command1, BUFFSIZE,0);
+
+                recv(clientSocket, buffer, BUFFSIZE, 0);
+                if(!strcmp(buffer, "F_OK"))
+                    recv_file(clientSocket);
+                else
+                    printf("@ file doesn't exist"); 
+            }
+        }
+
+
+               else if(!strcmp(command1, "help"))//przeslij plik
         {
         printf("\n\nCo chcesz zrobic? \nsend [file_name] - przeslij plik \nrecieve [file_name]-pobierz plik ");
         printf("\n?-przenies/zmien nazwe \n?-wyszukaj \n?-wylistuj pliki ");
@@ -86,9 +116,9 @@ int main()
         // case 2://pobierz plik
         // {
         //     printf("Podaj nazwe pliku do pobrania: ");
-        //     scanf("%s",nazwaPliku);
+        //     scanf("%s",filename);
         //     strcpy(buffer,"pobierz ");
-        //     strcat(buffer, nazwaPliku);
+        //     strcat(buffer, filename);
         //     strcpy(kopia, buffer);//do sprawdzania, czy na serwerze istnieje plik
 
         //     send(clientSocket, buffer, BUFFSIZE,0);
@@ -97,7 +127,7 @@ int main()
 
         //     if(strcmp(buffer, kopia))
         //     {
-        //         FILE *file = fopen(nazwaPliku, "w");
+        //         FILE *file = fopen(filename, "w");
         //         fputs(buffer, file);
         //         fclose(file);
         //         printf("Pobrano plik.\n");
@@ -108,25 +138,25 @@ int main()
         // case 3://zmien nazwe
         // {
         //     printf("Podaj dotychczasowa nazwe pliku: ");
-        //     scanf("%s",nazwaPliku);
+        //     scanf("%s",filename);
         //     strcpy(buffer,"nazwa ");
-        //     strcat(buffer, nazwaPliku);
+        //     strcat(buffer, filename);
         //     strcat(buffer, " ");
         //     printf("Podaj nowa nazwe pliku: ");
-        //     scanf("%s",nazwaPliku);
-        //     strcat(buffer, nazwaPliku);
+        //     scanf("%s",filename);
+        //     strcat(buffer, filename);
         //     break;
         // }
         // case 4://wyszukaj plik
         // {
         //     printf("Podaj fraze z nazwy pliku: ");
-        //     scanf("%s",nazwaPliku);//np. wpisanie sr* wyswietli pliki (musi byc gwiazdka)
+        //     scanf("%s",filename);//np. wpisanie sr* wyswietli pliki (musi byc gwiazdka)
         //     strcpy(buffer,"szukaj \"*");
-        //     strcat(buffer, nazwaPliku);
+        //     strcat(buffer, filename);
         //     strcat(buffer, "*\"*");
         //     break;
         // }
-        else if(!strcmp(command, "ls"))//wyswietl pliki
+        else if(!strcmp(command1, "ls"))//wyswietl pliki
         {
             strcpy(buffer, "ls -l");
 
@@ -139,7 +169,7 @@ int main()
 
             // break;
         }
-        else if(!strcmp(command, "pwd"))
+        else if(!strcmp(command1, "pwd"))
         {
             strcpy(buffer,"pwd");
             send(clientSocket, buffer, BUFFSIZE,0);
@@ -150,7 +180,7 @@ int main()
             // break;
         }
 
-        else if(!strcmp(command, "cd"))//wyswietl pliki
+        else if(!strcmp(command1, "cd"))//wyswietl pliki
         {
             strcpy(buffer,"cd ");
             strcat(buffer, command2);
@@ -162,13 +192,19 @@ int main()
         }
 
 
-                if(!strcmp(command, "exit"))//wyswietl pliki
+        else if(!strcmp(command1, "exit"))//wyswietl pliki
         {
 
 
                 close(clientSocket);
                 return 0;
         }
+
+        else {
+
+            printf("@ command-not-found\n"); 
+        }
+
 
         // default:
         //      return 0;
@@ -182,12 +218,12 @@ int main()
         //     /*---- Print the received message ----*/
         //     printf("%s", buffer);
         // }
-            for (int a=0; a<BUFFSIZE; a++){
-            buffer[a]=0;//czyszczenie bufora
-            command[a]=0;}
-            
-            for (int a=0; a<255; a++)
-            option[a]=0;//czyszczenie bufora
+
+            bzero(buffer,BUFFSIZE);
+            bzero(command1,BUFFSIZE);
+            bzero(command2,BUFFSIZE);
+            bzero(option,BUFFSIZE);
+          
     }
 
         

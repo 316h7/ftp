@@ -17,11 +17,11 @@
 #include	<unistd.h>
 #include	<syslog.h>
 
-
+#include <sys/stat.h>
 
 #define LISTENQ 5
 #define BUFFSIZE 1024
-#define BUFFSIZE2 80000
+#define BUFFSIZE2 1024
 #define MAXFD   64
 char    str[INET_ADDRSTRLEN+1];
 

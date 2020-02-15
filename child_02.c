@@ -3,11 +3,11 @@
 
 
 
-char* read_command_output(const char* command)
+char* read_command_output(const char* command1)
 {
     const int CHUNK = BUFFSIZE;
 
-    FILE* pipe = popen(command, "r");
+    FILE* pipe = popen(command1, "r");
     if (pipe == NULL)
     {
         puts("popen failed");
@@ -56,13 +56,13 @@ char* read_command_output(const char* command)
 
 
 
- void cmd_child(int connfd){
+ void cmd_child(int serverSocket){
 
-	size_t uchwyt;
+
 	int  zmienNazwe=0;
     int k, sndbuf;
     char* komenda;
-	char buf[BUFFSIZE2], command[BUFFSIZE];
+	char buf[BUFFSIZE], command1[BUFFSIZE];
     char command2[BUFFSIZE], command3[BUFFSIZE];
 
 /*----pobranie komendy----*/
@@ -71,85 +71,107 @@ char* read_command_output(const char* command)
              // chroot("~/ftp"); 
 again:
 
-           recv(connfd, buf, sizeof(buf), 0);// > 0//  if ( ) {
+           recv(serverSocket, buf, BUFFSIZE, 0);// > 0//  if ( ) {
             //Rozpoznanie komendy
 
-            sscanf(buf, "%s %s %s", command, command2, command3);//WYBOR CZYNNOSCI W TAKI SPOSOB
-            if(!strcmp(command, "ls"))//TAK SPRAWDZAMY CO MA SIE STAC, nie musi byc to komenda
+            sscanf(buf, "%s %s %s", command1, command2, command3);//WYBOR CZYNNOSCI W TAKI SPOSOB
+            if(!strcmp(command1, "ls"))//TAK SPRAWDZAMY CO MA SIE STAC, nie musi byc to komenda
             {
-                strcat(command," ");
-                strcat(command, command2);
-                komenda=read_command_output(command);
+                strcat(command1," ");
+                strcat(command1, command2);
+                komenda=read_command_output(command1);
                 strcpy(buf, komenda);
-                send(connfd, buf, BUFFSIZE,0);
+                send(serverSocket, buf, BUFFSIZE,0);
             }
-            else if(!strcmp(command, "szukaj"))  //TAK SPRAWDZAMY, nie musi byc to komenda
+            else if(!strcmp(command1, "szukaj"))  //TAK SPRAWDZAMY, nie musi byc to komenda
             {
-                strcpy(command,"find -name ");
-                strcat(command,command2);
-                komenda=read_command_output(command);
+                strcpy(command1,"find -name ");
+                strcat(command1,command2);
+                komenda=read_command_output(command1);
                 sprintf(buf, "%s", komenda);
-                send(connfd, buf, BUFFSIZE,0);
+                send(serverSocket, buf, BUFFSIZE,0);
             }
-            else if(!strcmp(command, "nazwa"))
+            else if(!strcmp(command1, "nazwa"))
             {
                 zmienNazwe=rename(command2, command3);
                 if (zmienNazwe==-1)
                     strcpy(buf,"Nie ma takiego pliku lub inny blad.\n");
                 else strcpy(buf,"Sukces!\n");
-                send(connfd, buf, BUFFSIZE,0);
+                send(serverSocket, buf, BUFFSIZE,0);
             }
-            else if(!strcmp(command, "pwd"))
+            else if(!strcmp(command1, "pwd"))
             {
             	// chroot("~/"); 
 				// chdir("~/");
             	getcwd(cwd, sizeof(cwd));
-                // komenda=read_command_output(command);
+                // komenda=read_command_output(command1);
 
                 strcpy(buf, cwd);
-                send(connfd, buf, BUFFSIZE,0);
+                send(serverSocket, buf, BUFFSIZE,0);
             }
-            else if(!strcmp(command, "pobierz"))
+            else if(!strcmp(command1, "recv"))
             {
-                uchwyt = open(command2, O_RDONLY);
-                if (uchwyt == -1)
-                    uchwyt=0;
-                sendfile(connfd, uchwyt, NULL, BUFFSIZE2);
-                close(uchwyt);
+
+
+            if ( access( command2, F_OK ) != -1 ){   // file exists
+                strcpy(buf, "F_OK");
+                send(serverSocket, buf, BUFFSIZE,0);    
+            
+            printf("Sending... \n" );
+            send_file(command2, serverSocket);
+            printf("OK \n" );}
+  
+            else // file doesn't exist
+            {
+                strcpy(buf, "@ no such file or directory");
+                send(serverSocket, buf, BUFFSIZE,0);
+
+            } 
+
             }
-            else if(!strcmp(command, "wyslij"))
+
+
+
+
+            else if(!strcmp(command1, "send"))
             {
             	printf("Sending... \n" );
                 /*---- Read the message from the server into the buffer ----*/
-                recv_file( connfd );
+                recv_file( serverSocket );
                 printf("OK \n" );
            			 // }
 }
-            else if(!strcmp(command, "cd"))
+            else if(!strcmp(command1, "cd"))
             {
             	// chroot(command2); 
-				chdir(command2);
+				if (chdir(command2) == -1){
+
+                strcpy(cwd, "@ no such file or directory");
+                // strcpy(buf, cwd);
+                send(serverSocket, cwd, BUFFSIZE,0);
+                }
+                else{
             	getcwd(cwd, sizeof(cwd));
-                // komenda=read_command_output(command);
+                // komenda=read_command_output(command1);
 
                 strcpy(buf, cwd);
-                send(connfd, buf, BUFFSIZE,0);
+                send(serverSocket, buf, BUFFSIZE,0);}
             }
 
             
-            for (int a=0; a<BUFFSIZE2; a++)
-                buf[a]=0;
-            for (int a=0; a<BUFFSIZE; a++)
-                command[a]=0;
+            bzero(buf,BUFFSIZE);
+            bzero(command1,BUFFSIZE);
+            bzero(command2,BUFFSIZE);
+            bzero(command3,BUFFSIZE);
+            
 
-            //}
 
   goto again;
  };
 
 
  void child_main(int i, int listenfd, int addrlen){
- int connfd;
+ int serverSocket;
 
  socklen_t clilen;
  struct sockaddr *cliaddr;
@@ -157,9 +179,9 @@ again:
  // printf("child %ld starting\n", (long) getpid());
  	for ( ; ; ) {
  	clilen = addrlen;
- 	connfd = accept(listenfd, cliaddr, &clilen);
- 	cmd_child(connfd); /* process the request */
- 	close(connfd);
+ 	serverSocket = accept(listenfd, cliaddr, &clilen);
+ 	cmd_child(serverSocket); /* process the request */
+ 	close(serverSocket);
  }
  }
 
