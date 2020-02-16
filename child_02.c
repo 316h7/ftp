@@ -66,8 +66,8 @@ char* read_command_output(const char* command1)
     char command2[BUFFSIZE], command3[BUFFSIZE];
 
 /*----pobranie komendy----*/
-			// chroot("~/"); 
-             // chdir("~/");
+			  chroot(path); 
+              chdir(path);
              // chroot("~/ftp"); 
 again:
 
@@ -83,7 +83,7 @@ again:
                 strcpy(buf, komenda);
                 send(serverSocket, buf, BUFFSIZE,0);
             }
-            else if(!strcmp(command1, "szukaj"))  //TAK SPRAWDZAMY, nie musi byc to komenda
+            else if(!strcmp(command1, "find"))  //TAK SPRAWDZAMY, nie musi byc to komenda
             {
                 strcpy(command1,"find -name ");
                 strcat(command1,command2);
@@ -91,12 +91,12 @@ again:
                 sprintf(buf, "%s", komenda);
                 send(serverSocket, buf, BUFFSIZE,0);
             }
-            else if(!strcmp(command1, "nazwa"))
+            else if(!strcmp(command1, "rename"))
             {
                 zmienNazwe=rename(command2, command3);
                 if (zmienNazwe==-1)
-                    strcpy(buf,"Nie ma takiego pliku lub inny blad.\n");
-                else strcpy(buf,"Sukces!\n");
+                    strcpy(buf,"no such file or directory");
+                else strcpy(buf,"   ");
                 send(serverSocket, buf, BUFFSIZE,0);
             }
             else if(!strcmp(command1, "pwd"))
@@ -117,9 +117,9 @@ again:
                 strcpy(buf, "F_OK");
                 send(serverSocket, buf, BUFFSIZE,0);    
             
-            printf("Sending... \n" );
+            
             send_file(command2, serverSocket);
-            printf("OK \n" );}
+        }
   
             else // file doesn't exist
             {
@@ -135,11 +135,9 @@ again:
 
             else if(!strcmp(command1, "send"))
             {
-            	printf("Sending... \n" );
-                /*---- Read the message from the server into the buffer ----*/
+
                 recv_file( serverSocket );
-                printf("OK \n" );
-           			 // }
+      
 }
             else if(!strcmp(command1, "cd"))
             {
@@ -180,6 +178,8 @@ again:
  	for ( ; ; ) {
  	clilen = addrlen;
  	serverSocket = accept(listenfd, cliaddr, &clilen);
+    inet_ntop(AF_INET, &cliaddr, str, sizeof(str));
+    syslog (LOG_NOTICE, "%s connected", str);
  	cmd_child(serverSocket); /* process the request */
  	close(serverSocket);
  }
@@ -223,8 +223,9 @@ int daemon_init(const char *pname, int facility, uid_t uid, int socket)
     /* child 2 continues... */
 
     // chdir("/tmp");              /* change working directory  or chroot()*/
- chroot(getenv("HOME"));
-chdir(getenv("HOME"));
+chroot(path);
+chdir(path);
+
     /* close off file descriptors */
     for (i = 0; i < MAXFD; i++){
         if(socket != i )

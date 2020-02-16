@@ -127,31 +127,126 @@ printf("size- %d\n",i_size );
 
 }
 
-/*while(1){
 
 
+struct sockaddr_in multicast_cli()
+{   
+   struct sockaddr_in ret_addr; 
+   struct sockaddr_in addr;
+   int addrlen, sock, cnt;
+   struct ip_mreq mreq;
+   char message[INET_ADDRSTRLEN];
+   unsigned short port_n;
+   /* set up socket */
+   sock = socket(AF_INET, SOCK_DGRAM, 0);
+   if (sock < 0) {
+     perror("socket");
+     exit(1);
+   }
+   bzero((char *)&addr, sizeof(addr));
+   addr.sin_family = AF_INET;
+   addr.sin_addr.s_addr = htonl(INADDR_ANY);
+   addr.sin_port = htons(MULTICAST_PORT);
+   addrlen = sizeof(addr);
 
-                if(i_size >= -1 & recv(new_s, toRECV, 1, 0) !=0 ) {        // https://stackoverflow.com/questions/15116053/some-eof-mechanism-for-send-recv-in-c
-                	
-                    fwrite (toRECV , sizeof(toRECV[0]) , 1 , file);  //write EOF mechanism for recv 
-                     i_size=i_size-sizeof(toRECV[0]);
-                    // if (i_size<-1)
-                    // {
-                    // 	break;
-                    // }
-                     printf("%d\n",i_size);
-                }
 
-                    else{
-                    	printf("end\n");
+      /* receive */
+      if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {        
+         perror("bind");
+     exit(1);
+      }    
+      mreq.imr_multiaddr.s_addr = inet_addr(MULTICAST_GROUP);         
+      mreq.imr_interface.s_addr = htonl(INADDR_ANY);         
+      if (setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+             &mreq, sizeof(mreq)) < 0) {
+     perror("setsockopt mreq");
+     exit(1);
+      }         
+     
+     cnt = recvfrom(sock, message, sizeof(message), 0, 
+            (struct sockaddr *) &addr, &addrlen);
+
+     cnt = recvfrom(sock, &port_n, sizeof(port_n), 0, 
+            (struct sockaddr *) &addr, &addrlen);
+
+     if (cnt < 0) {
+        perror("recvfrom");
+        exit(1);
+     } 
+     // printf("%s:%d\n",message ,port_n );
+    ret_addr.sin_addr.s_addr = inet_addr(message);
+    ret_addr.sin_port = htons(port_n);
+
+    close(sock);
+
+    return ret_addr;
  
-  fclose(file);
-  free(buffer);
-  free(fname);
- return 0;}
-
-}*/
-// }
+    
+}
 
 
+void multicast_srv( struct sockaddr_in send_addr)    // e.g. htons(3490)
+{  
+   unsigned short port_n;
+   // char port_buf[sizeof(unsigned short)];
+   char buf[INET_ADDRSTRLEN]; 
+   struct sockaddr_in addr;
+   int addrlen, sock, cnt;
+   struct ip_mreq mreq;
+   char message[50];
 
+   /* set up socket */
+
+
+   sock = socket(AF_INET, SOCK_DGRAM, 0);
+   if (sock < 0) {
+     perror("socket");
+     exit(1);
+   }
+   bzero((char *)&addr, sizeof(addr));
+   addr.sin_family = AF_INET;
+   // addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+   addr.sin_addr.s_addr = inet_addr(MULTICAST_GROUP); 
+   addr.sin_port = htons(MULTICAST_PORT);
+   addrlen = sizeof(addr);
+  
+
+  
+      /* send */
+   // ntohs(addr.sin_port)  ntohs(port_n)
+   
+    // sprintf(port_buf, "%d", port_n);
+    // memcpy(port_buf, &port_n, sizeof(unsigned short));
+     port_n=ntohs(send_addr.sin_port);
+     inet_ntop(AF_INET, &send_addr.sin_addr.s_addr, buf, sizeof(buf));
+      // printf("inet addr: %s\n", buf);
+
+      // if (inet_ntop(AF_INET, &addr.sin_port, buf, sizeof(buf)) != NULL)
+      // printf("inet port: %d\n", port_n);
+
+     
+      
+      while (1) {
+     time_t t = time(0);
+     // printf("sending: %s\n",buf);
+     cnt = sendto(sock, buf, sizeof(buf), 0,
+              (struct sockaddr *) &addr, addrlen);
+     if (cnt < 0) {
+        perror("sendto");
+        exit(1);
+     }
+
+     // printf("sending: %d\n",port_n);
+          cnt = sendto(sock, &port_n, sizeof(port_n), 0,
+              (struct sockaddr *) &addr, addrlen);
+     if (cnt < 0) {
+        perror("sendto");
+        exit(1);
+}
+
+
+     sleep(5);
+      }
+
+}

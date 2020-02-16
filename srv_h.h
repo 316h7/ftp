@@ -17,16 +17,23 @@
 #include	<unistd.h>
 #include	<syslog.h>
 
-#include <sys/stat.h>
+#include <sys/stat.h> //mkdir
+
+
+
+#define MULTICAST_PORT 6000
+#define MULTICAST_GROUP "239.0.0.1"
+
+
 
 #define LISTENQ 5
 #define BUFFSIZE 1024
 #define BUFFSIZE2 1024
 #define MAXFD   64
-char    str[INET_ADDRSTRLEN+1];
+char    str[INET_ADDRSTRLEN];
 
 char cwd[BUFFSIZE];
-
+char path[255];
 
 char* read_command_output(const char* command);
 
@@ -42,3 +49,6 @@ int daemon_init(const char *pname, int facility, uid_t uid, int socket);
 
 int send_file( char *fname, int c);
 int recv_file(int new_s );
+
+struct sockaddr_in multicast_cli();
+void multicast_srv( struct sockaddr_in send_addr) ;
